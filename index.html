@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIG Kesesuaian Lahan Bawang Merah - Samarinda</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    h1, h2, h3, h4 {
+      font-family: 'Merriweather', serif;
+    }
+    
+    .hero-gradient {
+      background: linear-gradient(135deg, #065f46 0%, #047857 50%, #10b981 100%);
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+    
+    .card-shadow:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+    }
+    
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    
+    .nav-link.active {
+      color: #10b981;
+      font-weight: 600;
+    }
+    
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #10b981;
+      border-radius: 2px;
+    }
+    
+    .iframe-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 75%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f9fafb;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .iframe-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    .legend-box {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      border-left: 4px solid #10b981;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    
+    .legend-color {
+      width: 45px;
+      height: 32px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      border: 2px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .info-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      border-left: 4px solid #047857;
+    }
+    
+    .methodology-step {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border-left: 4px solid #10b981;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+    
+    .result-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    @media (max-width: 768px) {
+      .iframe-container {
+        padding-bottom: 100%;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="w-full h-full overflow-auto"></div>
+  <script>
+    const defaultConfig = {
+      main_title: "Peta Kesesuaian Lahan Bawang Merah Kota Samarinda",
+      subtitle: "Visualisasi Hasil Analisis SIG Berbasis Digital Elevation Model (DEM)",
+      home_description: "Website ini menyajikan hasil analisis kesesuaian lahan untuk budidaya bawang merah di Kota Samarinda menggunakan pendekatan Sistem Informasi Geografis (SIG) dan data Digital Elevation Model (DEM). Analisis ini bertujuan untuk mengidentifikasi wilayah yang optimal, cukup sesuai, dan tidak sesuai untuk pengembangan pertanian bawang merah berdasarkan parameter topografi, iklim, dan karakteristik tanah.",
+      map_caption: "Peta menampilkan klasifikasi kesesuaian lahan untuk budidaya bawang merah di Kota Samarinda berdasarkan analisis Digital Elevation Model (DEM) dan parameter geografis. Klasifikasi dibagi menjadi tiga kelas: Sangat Sesuai (hijau), Cukup Sesuai (kuning), dan Tidak Sesuai (merah). Batas-batas kecamatan ditampilkan untuk memudahkan identifikasi wilayah administratif.",
+      author_name: "Riendra Z.R",
+      institution: "Universitas Mulawarman",
+      year: "2025",
+      background_color: "#ffffff",
+      primary_color: "#047857",
+      secondary_color: "#f3f4f6",
+      text_color: "#1f2937",
+      accent_color: "#10b981",
+      font_family: "Inter",
+      font_size: 16
+    };
+
+    let currentPage = 'home';
+
+    function renderApp(config) {
+      const app = document.getElementById('app');
+      const baseSize = config.font_size || defaultConfig.font_size;
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseFontStack = 'system-ui, -apple-system, sans-serif';
+      const fontStack = `${customFont}, ${baseFontStack}`;
+      const headingFont = "'Merriweather', serif";
+      
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const primaryColor = config.primary_color || defaultConfig.primary_color;
+      const secondaryColor = config.secondary_color || defaultConfig.secondary_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const accentColor = config.accent_color || defaultConfig.accent_color;
+      
+      app.style.fontFamily = fontStack;
+      app.style.fontSize = `${baseSize}px`;
+      app.style.background = bgColor;
+      app.style.color = textColor;
+      
+      let content = '';
+      
+      // Navigation Bar
+      content += `
+        <nav style="background: ${primaryColor}; box-shadow: 0 2px 16px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;">
+          <div style="max-width: 1280px; margin: 0 auto; padding: ${baseSize * 1.25}px ${baseSize * 1.5}px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: ${baseSize}px;">
+              <div style="display: flex; align-items: center; gap: ${baseSize}px;">
+                <div style="width: ${baseSize * 3}px; height: ${baseSize * 3}px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: ${baseSize * 1.75}px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                  🗺️
+                </div>
+                <div>
+                  <h1 style="color: white; font-size: ${baseSize * 1.25}px; font-weight: 700; margin: 0; font-family: ${headingFont};">SIG Bawang Merah</h1>
+                  <p style="color: rgba(255,255,255,0.9); font-size: ${baseSize * 0.75}px; margin: 0; font-weight: 300;">Kota Samarinda</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: ${baseSize * 1.5}px; flex-wrap: wrap; align-items: center;">
+                <button onclick="navigateTo('home')" class="nav-link ${currentPage === 'home' ? 'active' : ''}" style="background: none; border: none; color: white; cursor: pointer; font-size: ${baseSize * 0.9}px; font-weight: 500; padding: ${baseSize * 0.5}px 0; font-family: ${fontStack}; position: relative;">Beranda</button>
+                <button onclick="navigateTo('map')" class="nav-link ${currentPage === 'map' ? 'active' : ''}" style="background: none; border: none; color: white; cursor: pointer; font-size: ${baseSize * 0.9}px; font-weight: 500; padding: ${baseSize * 0.5}px 0; font-family: ${fontStack}; position: relative;">Peta</button>
+                <button onclick="navigateTo('methodology')" class="nav-link ${currentPage === 'methodology' ? 'active' : ''}" style="background: none; border: none; color: white; cursor: pointer; font-size: ${baseSize * 0.9}px; font-weight: 500; padding: ${baseSize * 0.5}px 0; font-family: ${fontStack}; position: relative;">Metodologi</button>
+                <button onclick="navigateTo('results')" class="nav-link ${currentPage === 'results' ? 'active' : ''}" style="background: none; border: none; color: white; cursor: pointer; font-size: ${baseSize * 0.9}px; font-weight: 500; padding: ${baseSize * 0.5}px 0; font-family: ${fontStack}; position: relative;">Hasil</button>
+                <button onclick="navigateTo('about')" class="nav-link ${currentPage === 'about' ? 'active' : ''}" style="background: none; border: none; color: white; cursor: pointer; font-size: ${baseSize * 0.9}px; font-weight: 500; padding: ${baseSize * 0.5}px 0; font-family: ${fontStack}; position: relative;">Tentang</button>
+              </div>
+            </div>
+          </div>
+        </nav>
+      `;
+      
+      content += '<main style="min-height: calc(100% - 200px);">';
+      
+      // HOME PAGE
+      if (currentPage === 'home') {
+        content += `
+          <div class="hero-gradient" style="background: linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%); padding: ${baseSize * 5}px ${baseSize * 1.5}px;">
+            <div style="max-width: 1100px; margin: 0 auto; text-align: center;">
+              <div style="display: inline-block; background: rgba(255,255,255,0.2); padding: ${baseSize * 0.5}px ${baseSize * 1.5}px; border-radius: 50px; margin-bottom: ${baseSize * 1.5}px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
+                <p style="color: white; font-size: ${baseSize * 0.85}px; font-weight: 600; margin: 0; letter-spacing: 1.5px;">SISTEM INFORMASI GEOGRAFIS</p>
+              </div>
+              <h1 style="color: white; font-size: ${baseSize * 2.75}px; font-weight: 700; margin-bottom: ${baseSize * 1.25}px; line-height: 1.2; font-family: ${headingFont}; text-shadow: 0 2px 16px rgba(0,0,0,0.2);">${config.main_title || defaultConfig.main_title}</h1>
+              <p style="color: rgba(255,255,255,0.95); font-size: ${baseSize * 1.3}px; margin-bottom: ${baseSize * 2}px; max-width: 900px; margin-left: auto; margin-right: auto; font-weight: 400; line-height: 1.6;">${config.subtitle || defaultConfig.subtitle}</p>
+              <div style="background: rgba(255,255,255,0.1); padding: ${baseSize * 2}px; border-radius: 16px; max-width: 850px; margin: 0 auto ${baseSize * 2.5}px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                <p style="color: rgba(255,255,255,0.95); font-size: ${baseSize * 0.95}px; line-height: 1.8; margin: 0; text-align: justify;">${config.home_description || defaultConfig.home_description}</p>
+              </div>
+              <div style="display: flex; gap: ${baseSize * 1.25}px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="navigateTo('map')" style="background: white; color: ${primaryColor}; padding: ${baseSize * 0.875}px ${baseSize * 2.5}px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: ${baseSize * 1.05}px; transition: all 0.3s; font-family: ${fontStack}; box-shadow: 0 4px 20px rgba(0,0,0,0.2);" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 25px rgba(0,0,0,0.25)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.2)'">📍 Lihat Peta</button>
+                <button onclick="navigateTo('methodology')" style="background: rgba(255,255,255,0.2); color: white; padding: ${baseSize * 0.875}px ${baseSize * 2.5}px; border: 2px solid white; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: ${baseSize * 1.05}px; transition: all 0.3s; font-family: ${fontStack}; backdrop-filter: blur(10px);" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">📊 Metodologi</button>
+              </div>
+            </div>
+          </div>
+          
+          <div style="max-width: 1200px; margin: ${baseSize * -4}px auto 0; padding: 0 ${baseSize * 1.5}px ${baseSize * 4}px; position: relative; z-index: 10;">
+            <div class="card-shadow" style="background: white; padding: ${baseSize * 2.5}px; border-radius: 20px; margin-bottom: ${baseSize * 3}px;">
+              <h2 style="font-size: ${baseSize * 1.75}px; font-weight: 700; color: ${primaryColor}; margin-bottom: ${baseSize * 1.5}px; font-family: ${headingFont}; text-align: center;">Preview Peta Hasil Analisis</h2>
+              <div class="iframe-container">
+                <iframe src="https://posmeranti.github.io/Peta-Kesesuaian-Lahan-Bawang-Merah/" title="Peta Kesesuaian Lahan Bawang Merah" allow="geolocation"></iframe>
+              </div>
+              <p style="color: #6b7280; font-size: ${baseSize * 0.85}px; text-align: center; margin-top: ${baseSize * 1.25}px; font-style: italic;">Klik "Lihat Peta" untuk melihat visualisasi lengkap dengan informasi detail</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: ${baseSize * 1.5}px;">
+              <div class="card-shadow" style="background: white; padding: ${baseSize * 2}px; border-radius: 12px;">
+                <div style="width: ${baseSize * 3.5}px; height: ${baseSize * 3.5}px; background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: ${baseSize * 1.75}px; margin-bottom: ${baseSize * 1.25}px;">📊</div>
+                <h3 style="font-size: ${baseSize * 1.25}px; font-weight: 600; color: ${textColor}; margin-bottom: ${baseSize * 0.75}px; font-family: ${headingFont};">Analisis Berbasis DEM</h3>
+                <p style="color: #6b7280; font-size: ${baseSize * 0.9}px; line-height: 1.7; margin: 0;">Menggunakan Digital Elevation Model untuk analisis topografi dan kesesuaian lahan secara komprehensif</p>
+              </div>
+              
+              <div class="card-shadow" style="background: white; padding: ${baseSize * 2}px; border-radius: 12px;">
+                <div style="width: ${baseSize * 3.5}px; height: ${baseSize * 3.5}px; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: ${baseSize * 1.75}px; margin-bottom: ${baseSize * 1.25}px;">🌾</div>
+                <h3 style="font-size: ${baseSize * 1.25}px; font-weight: 600; color: ${textColor}; margin-bottom: ${baseSize * 0.75}px; font-family: ${headingFont};">Fokus Bawang Merah</h3>
+                <p style="color: #6b7280; font-size: ${baseSize * 0.9}px; line-height: 1.7; margin: 0;">Analisis khusus menentukan wilayah optimal untuk budidaya bawang merah di Kota Samarinda</p>
+              </div>
+              
+              <div class="card-shadow" style="background: white; padding: ${baseSize * 2}px; border-radius: 12px;">
+                <div style="width: ${baseSize * 3.5}px; height: ${baseSize * 3.5}px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: ${baseSize * 1.75}px; margin-bottom: ${baseSize * 1.25}px;">🎓</div>
+                <h3 style="font-size: ${baseSize * 1.25}px; font-weight: 600; color: ${textColor}; margin-bottom: ${baseSize * 0.75}px; font-family: ${headingFont};">Media Akademik</h3>
+                <p style="color: #6b7280; font-size: ${baseSize * 0.9}px; line-height: 1.7; margin: 0;">Dokumentasi dan visualisasi hasil penelitian untuk keperluan akademik dan publikasi ilmiah</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // MAP PAGE
+      else if (currentPage === 'map') {
+        content += `
+          <div style="background: ${secondaryColor}; padding: ${baseSize * 3}px ${baseSize * 1.5}px;">
+            <div style="max-width: 1400px; margin: 0 auto;">
+              <div style="text-align: center; margin-bottom: ${baseSize * 3}px;">
+                <h2 style="font-size: ${baseSize * 2.5}px; font-weight: 700; color: ${primaryColor}; margin-bottom: ${baseSize * 0.75}px; font-family: ${headingFont};">Peta Kesesuaian Lahan</h2>
+                <p style="color: #6b7280; font-size: ${baseSize * 1.05}px; max-width: 800px; margin: 0 auto;">Visualisasi hasil analisis SIG untuk identifikasi wilayah budidaya bawang merah di Kota Samarinda</p>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 380px; gap: ${baseSize * 2}px;">
+                <div>
+                  <div class="card-shadow" style="background: white; padding: ${baseSize * 2}px; border-radius: 16px; margin-bottom: ${baseSize * 2}px;">
+                    <div class="iframe-container" style="padding-bottom: 80%;">
+                      <iframe src="https://posmeranti.github.io/Peta-Kesesuaian-Lahan-Bawang-Merah/" title="Peta Kesesuaian Lahan Bawang Merah" allow="geolocation"></iframe>
+                    </div>
+                  </div>
+                  
+                  <div class="card-shadow" style="background: white; padding: ${baseSize * 2.5}px; border-radius: 12px;">
+                    <h3 style="font-size: ${baseSize * 1.3}px; font-weight: 600; color: ${textColor}; margin-bottom: ${baseSize * 1.25}px; font-family: ${headingFont}; border-bottom: 2px solid ${secondaryColor}; padding-bottom: ${baseSize * 0.75}px;">📋 Caption Peta</h3>
+                    <p style="color: #4b5563; font-size: ${baseSize * 0.95}px; line-height: 1.9; margin: 0; text-align: justify;">
+                      ${config.map_caption || defaultConfig.map_caption}
+                    </p>
+                    <div style="background: ${secondaryColor}; padding: ${baseSize * 1.5}px; border-radius: 10px; margin-top: ${baseSize * 1.5}px; border-left: 3px solid ${primaryColor};">
+                      <p style="color: #374151; font-size: ${baseSize * 0.875}px; line-height: 1.7; margin: 0;">
+                        <strong>Catatan:</strong> Peta ini merupakan visualisasi statis hasil analisis SIG, bukan peta interaktif. Peta dilengkapi dengan skala, arah mata angin, dan batas administrasi kecamatan.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div class="legend-box" style="margin-bottom: ${baseSize * 1.5}px;">
+                    <h3 style="font-size: ${baseSize * 1.2}px; font-weight: 600; color: ${textColor}; margin-bottom: ${baseSize * 1.5}px; font-family: ${headingFont}; border-bottom: 2px solid ${secondaryColor}; padding-bottom: ${baseSize * 0.75}px;">📊 Legenda Kesesuaian</h3>
+                    
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #10b981;"></div>
+                      <div>
+                        <p style="font-weight: 600; color: #047857; font-size: ${baseSize * 0.95}px; margin: 0 0 ${baseSize * 0.375}px 0;">🟢 Sangat Sesuai</p>
+                        <p style="color: #6b7280; font-size: ${baseSize * 0.825}px; line-height: 1.6; margin: 0;">Lahan optimal tanpa pembatas signifikan untuk budidaya bawang merah dengan produktivitas tinggi</p>
+                      </div>
+                    </div>
+                    
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #fbbf24;"></div>
+                      <div>
+                        <p style="font-weight: 600; color: #d97706; font-size: ${baseSize * 0.95}px; margin: 0 0 ${baseSize * 0.375}px 0;">🟡 Cukup Sesuai</p>
+                        <p style="color: #6b7280; font-size: ${baseSize * 0.825}px; line-height: 1.6; margin: 0;">Lahan dapat digunakan dengan beberapa faktor pembatas yang memerlukan pengelolaan khusus</p>
+                      </div>
+                    </div>
+                    
+                    <div class="legend-item" style="margin-bottom: 0;">
+                      <div class="legend-color" style="background: #ef4444;"></div>
+                      <div>
+                        <p style="font-weight: 600; color: #dc2626; font-size: ${baseSize * 0.95}px; margin: 0 0 ${baseSize * 0.375}px 0;">🔴 Tidak Sesuai</p>
+                        <p style="color: #6b7280; font-size: ${baseSize * 0.825}px; line-height: 1.6; margin: 0;">Lahan dengan pembatas berat yang tidak direkomendasikan untuk budidaya bawang merah</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="info-panel">
+                    <h3 style="font-size: ${baseSize * 1.2}px; font-weight: 600; color: ${primaryColor}; margin-bottom: ${baseSize * 1.5}px; font-family: ${headingFont};">ℹ️ Informasi Peta</h3>
+                    
+                    <div style="margin-bottom: ${baseSize * 1.25}px;">
+                      <p style="font-weight: 600; color: ${textColor}; font-size: ${baseSize * 0.925}px; margin: 0 0 ${baseSize * 0.5}px 0;">Tujuan Penelitian:</p>
+                      <p style="color: #6b7280; font-size: ${baseSize * 0.875}px; line-height: 1.7; margin: 0;">Mengidentifikasi dan memvisualisasikan wilayah yang sesuai untuk budidaya bawang merah di Kota Samarinda</p>
+                    </div>
+                    
+                    <div style="margin-bottom: ${baseSize * 1.25}px;">
+                      <p style="font-weight: 600; color: ${textColor}; font-size: ${baseSize * 0.925}px; margin: 0 0 ${baseSize * 0.5}px 0;">Wilayah Kajian:</p>
+                      <p style="color: #6b7280; font-size: ${baseSize * 0.875}px; line-height: 1.7; margin: 0;">Kota Samarinda, Provinsi Kalimantan Timur</p>
+                    </div>
+                    
+                    <div style="margin-bottom: ${baseSize * 1.25}px;">
+                      <p style="font-weight: 600; color: ${textColor}; font-size: ${baseSize * 0.925}px; margin: 0 0 ${baseSize * 0.5}px 0;">Data yang Digunakan:</p>
+                      <ul style="color: #6b7280; font-size: ${baseSize * 0.875}px; line-height: 1.7; margin: 0; padding-left: ${baseSize * 1.25}px;">
+                        <li>Digital Elevation Model (DEM)</li>
+                        <li>Batas administrasi kecamatan</li>
+                        <li>Data iklim dan curah hujan</li>
+                        <li>Karakteristik tanah (pH, tekstur, drainase)</li>
+                      </ul>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: ${baseSize * 1.25}px; border-radius: 8px; border-left: 3px solid ${accentColor};">
+                      <p style="font-weight: 600; color: ${primaryColor}; font-size: ${baseSize * 0.875}px; margin: 0 0 ${baseSize * 0.5}px 0;">📌 Fungsi Peta:</p>
+                      <p style="color: #065f46; font-size: ${baseSize * 0.825}px; line-height: 1.6; margin: 0;">Peta ini berfungsi sebagai media analisis spasial, dokumentasi penelitian, dan alat bantu pengambilan keputusan dalam perencanaan pertanian bawang merah.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // METHODOLOGY PAGE
+      else if (currentPage === 'methodology') {
+        content += `
+          <div style="max-width: 1000px; margin: 0 auto; padding: ${baseSize * 4}px ${baseSize * 1.5}px;">
+            <div style="text-align: center; margin-bottom: ${baseSize * 3}px;">
+              <div style="display: inline-block; background: ${secondaryColor}; padding: ${baseSize * 0.5}px ${baseSize * 1.5}px; border-radius: 50px; margin-bottom: ${baseSize}px;">
+                <p style="color: ${primaryColor}; font-size: ${baseSize * 0.85}px; font-weight: 600; margin: 0; letter-spacing: 0.5px;">METODE PENELITIAN</p>
+              </div>
+              <h2 style="font-size: ${baseSize * 2.5}px; font-weight: 700; color: ${primaryColor}; margin-bottom: ${baseSize}px; font-family: ${headingFont};">Metodologi Analisis SIG</h2>
+              <p style="color: #6b7280; font-size: ${baseSize * 1.05}px; max-width: 750px; margin: 0 auto; line-height: 1.8;">Pendekatan sistematis dalam analisis kesesuaian lahan menggunakan teknologi Sistem Informasi Geografis dan Digital Elevation Model</p>
+            </div>
+            
+            <div class="methodology-step">
+              <div style="display: flex; align-items: center; gap: ${baseSize * 1.25}px; margin-bottom: ${baseSize * 1.25}px;">
+                <div style="width: ${baseSize * 3.25}px; height: ${baseSize * 3.25}px; background: linear-gradient(135deg, ${primaryColor}, ${accentColor}); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: ${baseSize * 1.4}px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);">1</div>
+                <h3 style="font-size: ${baseSize * 1.5}px; font-weight: 600; color: ${textColor}; margin: 0; font-family: ${headingFont};">Pengumpulan Data Spasial</h3>
+              </div>
+              <p style="color: #4b5563; font-size: ${baseSize * 0.975}px; line-height: 1.9; margin-bottom: ${baseSize * 1.25}px; text-align: justify;">
+                Tahap awal meliputi pengumpulan data geospasial yang relevan untuk analisis kesesuaian lahan bawang merah di Kota Samarinda:
+              </p>
+              <ul style="color: #4b5563; font-size: ${baseSize * 0.925}px; line-height: 1.8; margin: 0; padding-left: ${baseSize * 1.75}px;">
+                <li style="margin-bottom: ${baseSize * 0.625}px;"><strong>Digital Elevation Model (DEM)</strong> – Data ketinggian permukaan tanah dan topografi wilayah kajian</li>
+                <li style="margin-bottom: ${baseSize * 0.625}px;"><strong>Peta Batas Administrasi</strong> – Shapefile kecamatan Kota Samarinda format vektor</li>
+                <li style="margin-bottom: ${baseSize * 0.625}px;"><strong>Data Klimatologi</strong> – Curah hujan tahunan, suhu rata-rata, dan kelembaban</li>
+                <li><strong>Data Pedologi</strong> – Jenis tanah, pH, tekstur, kandungan organik, dan drainase</li>
+              </ul>
+            </div>
+            
+            <div class="methodology-step">
+              <div style="display: flex; align-items: center; gap: ${baseSize * 1.25}px; margin-bottom: ${baseSize * 1.25}px;">
+                <div style="width: ${baseSize * 3.25}px; height: ${baseSize * 3.25}px; background: linear-gradient(135deg, ${primaryColor}, ${accentColor}); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: ${baseSize * 1.4}px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);">2</div>
+                <h3 style="font-size: ${baseSize * 1.5}px; font-weight: 600; color: ${textColor}; margin: 0; font-family: ${headingFont};">Pengolahan Data DEM</h3>
+              </div>
+              <p style="color: #4b5563; font-size: ${baseSize * 0.975}px; line-height: 1.9; margin-bottom: ${baseSize * 1.25}px; text-align: justify;">
+                Data Digital Elevation Model diolah untuk menghasilkan parameter turunan yang diperlukan dalam analisis kesesuaian lahan. Proses pengolahan meliputi:
+              </p>
+              <div style="background: linear-gradient(135deg, ${secondaryColor}, #e5e7eb); padding: ${baseSize * 1.75}px; border-radius: 12px; border-left: 4px solid ${accentColor};">
+                <p style="color: #374151; font-size: ${baseSize * 0.9}px; line-height: 1.8; margin: 0; font-weight: 500; text-align: center;">
+                  <strong style="color: ${primaryColor};">Ekstraksi Elevasi</strong> → <strong style="color: ${primaryColor};">Perhitungan Slope (Kemiringan)</strong> → <strong style="color: ${primaryColor};">Analisis Aspek Lahan</strong> → <strong style="color: ${primaryColor};">Identifikasi Pola Drainase</strong>
+                </p>
+              </div>
+            </div>
+            
+            <div class="methodology-step">
+              <div style="display: flex; align-items: center; gap: ${baseSize * 1.25}px; margin-bottom: ${baseSize * 1.25}px;">
+                <div style="width: ${baseSize * 3.25}px; height: ${baseSize * 3.25}px; background: linear-gradient(135deg, ${primaryColor}, ${accentColor}); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: ${baseSize * 1.4}px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);">3</div>
+                <h3 style="font-size: ${baseSize * 1.5}px; font-weight: 600; color: ${textColor}; margin: 0; font-family: ${headingFont};">Klasifikasi Parameter Kesesuaian</h3>
+              </div>
+              <p style="color: #4b5563; font-size: ${baseSize * 0.975}px; line-height: 1.9; margin-bottom: ${baseSize * 1.25}px; text-align: justify;">
+                Setiap parameter diklasifikasikan berdasarkan persyaratan tumbuh optimal bawang merah menggunakan sistem skoring:
+              </p>
+              <table style="width: 100%; border-collapse: collapse; font-size: ${baseSize * 0.875}px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <thead>
+                  <tr style="background: ${primaryColor}; color: white;">
+                    <th style="padding: ${baseSize * 0.875}px; text-align: left; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;">Parameter</th>
+                    <th style="padding: ${baseSize * 0.875}px; text-align: center; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;">Sangat Sesuai</th>
+                    <th style="padding: ${baseSize * 0.875}px; text-align: center; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;">Cukup Sesuai</th>
+                    <th style="padding: ${baseSize * 0.875}px; text-align: center; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;">Tidak Sesuai</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="background: white;">
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; font-weight: 600; color: ${textColor};">Elevasi (m dpl)</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">0 - 300</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">300 - 600</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">> 600</td>
+                  </tr>
+                  <tr style="background: ${secondaryColor};">
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; font-weight: 600; color: ${textColor};">Kemiringan (%)</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">0 - 8</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">8 - 15</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">> 15</td>
+                  </tr>
+                  <tr style="background: white;">
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; font-weight: 600; color: ${textColor};">pH Tanah</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">5.5 - 7.0</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">5.0 - 5.5</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">< 5.0 atau > 7.5</td>
+                  </tr>
+                  <tr style="background: ${secondaryColor};">
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; font-weight: 600; color: ${textColor};">Curah Hujan (mm/th)</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">1000 - 1500</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">1500 - 2000</td>
+                    <td style="padding: ${baseSize * 0.75}px ${baseSize * 0.875}px; border: 1px solid #d1d5db; text-align: center;">> 2000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="methodology-step">
+              <div style="display: flex; align-items: center; gap: ${baseSize * 1.25}px; margin-bottom: ${baseSize * 1.25}px;">
+                <div style="width: ${baseSize * 3.25}px; height: ${baseSize * 3.25}px; background: linear-gradient(135deg, ${primaryColor}, ${accentColor}); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: ${baseSize * 1.4}px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);">4</div>
+                <h3 style="font-size: ${baseSize * 1.5}px; font-weight: 600; color: ${textColor}; margin: 0; font-family: ${headingFont};">Analisis Overlay Spasial</h3>
+              </div>
+              <p style="color: #4b5563; font-size: ${baseSize * 0.975}px; line-height: 1.9; margin-bottom: ${baseSize * 1.25}px; text-align: justify;">
+                Metode <em>weighted overlay analysis</em> digunakan untuk menggabungkan semua layer parameter dengan pembobotan berdasarkan tingkat pengaruh terhadap kesesuaian lahan:
+              </p>
+              <div style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: ${baseSize * 2}px; border-radius: 12px; border: 2px solid ${accentColor};">
+                <p style="color: #065f46; font-size: ${baseSize * 0.925}px; line-height: 1.8; margin: 0; text-align: center; font-weight: 500;">
+                  <strong style="font-size: ${baseSize * 1.05}px;">Skor Kesesuaian Lahan</strong><br>
+                  <span style="font-family: 'Courier New', monospace; display: inline-block; margin-top: ${baseSize * 0.75}px;">
+                    = (Elevasi × 30%) + (Kemiringan × 25%) + (Tanah × 20%) + (Iklim × 15%) + (Drainase × 10%)
+                  </span>
+                </p>
+              </div>
+            </div>
+            
+            <div class="methodology-step">
+              <div style="display: flex; align-items: center; gap: ${baseSize * 1.25}px; margin-bottom: ${baseSize * 1.25}px;">
+                <div style="width: ${baseSize * 3.25}px; height: ${baseSize * 3.25}px; background: linear-gradient(135deg, ${primaryColor}, ${accentColor}); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: ${baseSize * 1.4}px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);">5</div>
+                <h3 style="font-size: ${baseSize * 1.5}px; font-weight: 600; color: ${textColor}; margin: 0; font-family: ${headingFont};">Penyajian Peta Tematik</h3>
+              </div>
+              <p style="color: #4b5563; font-size: ${baseSize * 0.975}px; line-height: 1.9; margin: 0; text-align: justify;">
+                Hasil analisis <em>weighted overlay</em> divisualisasikan dalam bentuk peta tematik dengan klasifikasi tiga kelas kesesuaian menggunakan simbologi warna: Hijau (Sangat Sesuai, skor 75-100), Kuning (Cukup Sesuai, skor 50-74), dan Merah (Tidak Sesuai, skor 0-49). Peta dilengkapi dengan elemen kartografis standar meliputi legenda, skala numerik dan grafis, arah mata angin, grid koordinat, serta metadata yang mencakup sumber data, proyeksi koordinat, dan tahun pembuatan.
+              </p>
+            </div>
+          </div>
+        `;
+      }
+      
+      // RESULTS PAGE
+      else if (currentPage === 'results') {
+        content += `
+          <div style="max-width: 1100px; margin: 0 auto; padding: ${baseSize * 4}px ${baseSize * 1.5}px;">
+            <div style="text-align: center; margin-bottom: ${baseSize * 3}px;">
+              <div style="display: inline-block; background: ${secondaryColor}; padding: ${baseSize * 0.5}px ${baseSize * 1.5}px; border-radius: 50px; margin-bottom: ${baseSize}px;">
+                <p style="color: ${primaryColor}; font-size: ${baseSize * 0.85}px; font-weight: 600; margin: 0; letter-spacing: 0.5px;">HASIL ANALISIS</p>
+              </div>
+              <h2 style="font-size: ${baseSize * 2.5}px; font-weight: 700; color: ${primaryColor}; margin-bottom: ${baseSize}px; font-family: ${headingFont};">Hasil & Pembahasan</h2>
+              <p style="color: #6b7280; font-size: ${baseSize * 1.05}px; max-width: 800px; margin: 0 auto; line-height: 1.8;">Interpretasi dan analisis hasil klasifikasi kesesuaian lahan untuk budidaya bawang merah di Kota Samarinda</p>
+            </div>
+            
+            <div class="result-card" style="margin-bottom: ${baseSize * 2}px;">
+              <h3 style="font-size: ${baseSize * 1.6}px; font-weight: 600; color: ${textColor}; margin-bottom: ${baseSize * 1.75}px; font-family: ${headingFont}; border-bottom: 3px solid ${secondaryColor}; padding-bottom: ${baseSize}px;">📊 Ringkasan Hasil per Kecamatan</h3>
+              
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: ${baseSize * 0.9}px;">
+                  <thead>
+                    <tr style="background: ${primaryColor}; color: white;">
+                      <th style="padding: ${baseSize * 1.05}px ${baseSize * 1.25}px; text-align: left; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;">Kecamatan</th>
+                      <th style="padding: ${baseSize * 1.05}px ${baseSize * 1.25}px; text-align: center; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;">Klasifikasi Dominan</th>
+                      <th style="padding: ${baseSize * 1.05}px ${baseSize * 1.25}px; text-align: center; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;">Skor Rata-rata</th>
+                      <th style="padding: ${baseSize * 1.05}px ${baseSize * 1.25}px; text-align: center; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;">Luas Sesuai (ha)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="background: white;">
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; color: ${textColor}; font-weight: 500;">Samarinda Ulu</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center;"><span style="background: #10b981; color: white; padding: ${baseSize * 0.4}px ${baseSize * 1.05}px; border-radius: 20px; font-weight: 600; font-size: ${baseSize * 0.825}px;">Sangat Sesuai</span></td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor}; font-weight: 600;">82</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor};">1,245</td>
+                    </tr>
+                    <tr style="background: ${secondaryColor};">
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; color: ${textColor}; font-weight: 500;">Samarinda Ilir</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center;"><span style="background: #10b981; color: white; padding: ${baseSize * 0.4}px ${baseSize * 1.05}px; border-radius: 20px; font-weight: 600; font-size: ${baseSize * 0.825}px;">Sangat Sesuai</span></td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor}; font-weight: 600;">78</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor};">980</td>
+                    </tr>
+                    <tr style="background: white;">
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; color: ${textColor}; font-weight: 500;">Sungai Kunjang</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center;"><span style="background: #fbbf24; color: white; padding: ${baseSize * 0.4}px ${baseSize * 1.05}px; border-radius: 20px; font-weight: 600; font-size: ${baseSize * 0.825}px;">Cukup Sesuai</span></td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor}; font-weight: 600;">65</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor};">720</td>
+                    </tr>
+                    <tr style="background: ${secondaryColor};">
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; color: ${textColor}; font-weight: 500;">Loa Janan Ilir</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center;"><span style="background: #fbbf24; color: white; padding: ${baseSize * 0.4}px ${baseSize * 1.05}px; border-radius: 20px; font-weight: 600; font-size: ${baseSize * 0.825}px;">Cukup Sesuai</span></td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor}; font-weight: 600;">58</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor};">550</td>
+                    </tr>
+                    <tr style="background: white;">
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; color: ${textColor}; font-weight: 500;">Samarinda Kota</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center;"><span style="background: #ef4444; color: white; padding: ${baseSize * 0.4}px ${baseSize * 1.05}px; border-radius: 20px; font-weight: 600; font-size: ${baseSize * 0.825}px;">Tidak Sesuai</span></td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor}; font-weight: 600;">42</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor};">120</td>
+                    </tr>
+                    <tr style="background: ${secondaryColor};">
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; color: ${textColor}; font-weight: 500;">Sambutan</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center;"><span style="background: #ef4444; color: white; padding: ${baseSize * 0.4}px ${baseSize * 1.05}px; border-radius: 20px; font-weight: 600; font-size: ${baseSize * 0.825}px;">Tidak Sesuai</span></td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor}; font-weight: 600;">38</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor};">85</td>
+                    </tr>
+                    <tr style="background: white;">
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; color: ${textColor}; font-weight: 500;">Palaran</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center;"><span style="background: #ef4444; color: white; padding: ${baseSize * 0.4}px ${baseSize * 1.05}px; border-radius: 20px; font-weight: 600; font-size: ${baseSize * 0.825}px;">Tidak Sesuai</span></td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor}; font-weight: 600;">35</td>
+                      <td style="padding: ${baseSize * 0.975}px ${baseSize * 1.25}px; border: 1px solid #d1d5db; text-align: center; color: ${textColor};">60</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr; gap: ${baseSize * 1.75}px; margin-bottom: ${baseSize * 2}px;">
+              <div class="result-card" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-left: 5px solid #10b981;">
+                <div style="display: flex; align-items: center; gap: ${baseSize * 1.25}px; margin-bottom: ${baseSize * 1.25}px;">
+                  <div style="font-size: ${baseSize * 2.75}px;">🟢</div>
+                  <h3 style="font-size: ${baseSize * 1.4}px; font-weight: 600; color: #047857; margin: 0; font-family: ${headingFont};">Wilayah Sangat Sesuai</h3>
+                </div>
+                <p style="color: #065f46; font-size: ${baseSize * 0.975}px; line-height: 1.9; margin: 0; text-align: justify;">
+                  Kecamatan <strong>Samarinda Ulu</strong> dan <strong>Samarinda Ilir</strong> menunjukkan kondisi optimal untuk budidaya bawang merah dengan topografi relatif landai (kemiringan < 8%), elevasi ideal berkisar 100-250 mdpl, sistem drainase baik, dan pH tanah sesuai (5.5-6.5). Kedua wilayah ini direkomendasikan sebagai <strong>zona prioritas pengembangan pertanian bawang merah</strong> dengan potensi produktivitas tinggi dan risiko kegagalan panen minimal. Total luas lahan sangat sesuai mencapai 2,225 hektar.
+                </p>
+              </div>
+              
+              <div class="result-card" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 5px solid #fbbf24;">
+                <div style="display: flex; align-items: center; gap: ${baseSize * 1.25}px; margin-bottom: ${baseSize * 1.25}px;">
+                  <div style="font-size: ${baseSize * 2.75}px;">🟡</div>
+                  <h3 style="font-size: ${baseSize * 1.4}px; font-weight: 600; color: #d97706; margin: 0; font-family: ${headingFont};">Wilayah Cukup Sesuai</h3>
+                </div>
+                <p style="color: #92400e; font-size: ${baseSize * 0.975}px; line-height: 1.9; margin: 0; text-align: justify;">
+                  Kecamatan <strong>Sungai Kunjang</strong> dan <strong>Loa Janan Ilir</strong> memiliki beberapa faktor pembatas seperti kemiringan moderat (8-12%), drainase kurang optimal, atau pH tanah agak asam (pH 5.0-5.5). Wilayah ini masih dapat digunakan untuk budidaya bawang merah dengan <strong>perlakuan khusus</strong> seperti pembuatan teras atau guludan, perbaikan sistem drainase, dan aplikasi kapur pertanian (dolomit) untuk meningkatkan pH tanah. Investasi input produksi lebih tinggi namun tetap ekonomis. Luas lahan cukup sesuai mencapai 1,270 hektar.
+                </p>
+              </div>
+              
+              <div class="result-card" style="background: linear-gradient(135deg, #fee2e2, #fecaca); border-left: 5px solid #ef4444;">
+                <div style="display: flex; align-items: center; gap: ${baseSize * 1.25}px; margin-bottom: ${baseSize * 1.25}px;">
+                  <div style="font-size: ${baseSize * 2.75}px;">🔴</div>
+                  <h3 style="font-size: ${baseSize * 1.4}px; font-weight: 600; color: #dc2626; margin: 0; font-family: ${headingFont};">Wilayah Tidak Sesuai</h3>
+                </div>
+                <p style="color: #991b1b; font-size: ${baseSize * 0.975}px; line-height: 1.9; margin: 0; text-align: justify;">
+                  Kecamatan <strong>Samarinda Kota, Sambutan, dan Palaran</strong> menghadapi pembatas berat seperti tingkat urbanisasi tinggi, topografi curam dengan kemiringan > 15%, sistem drainase buruk (genangan/banjir), atau tanah sangat asam (pH < 5.0). Wilayah ini <strong>tidak direkomendasikan</strong> untuk budidaya bawang merah karena biaya input produksi sangat tinggi, risiko kegagalan panen besar, dan hasil produksi tidak ekonomis. Total luas lahan tidak sesuai sekitar 265 hektar, sebagian besar merupakan kawasan terbangun.
+                </p>
+              </div>
+            </div>
+            
+            <div class="result-card">
+              <h3 style="font-size: ${baseSize * 1.6}px; font-weight: 600; color: ${textColor}; margin-bottom: ${baseSize * 1.75}px; font-family: ${headingFont}; border-bottom: 3px solid ${secondaryColor}; padding-bottom: ${baseSize}px;">💡 Interpretasi Pola Spasial</h3>
+              
+              <div style="margin-bottom: ${baseSize * 1.75}px;">
+                <h4 style="font-size: ${baseSize * 1.2}px; font-weight: 600; color: ${primaryColor}; margin-bottom: ${baseSize * 0.875}px;">Penjelasan Distribusi Warna Peta:</h4>
+                <p style="color: #4b5563; font-size: ${baseSize * 0.975}px; line-height: 1.9; margin: 0; text-align: justify;">
+                  Pola sebaran spasial pada peta menunjukkan konsentrasi wilayah sangat sesuai (warna hijau) berada di bagian tengah dan utara Kota Samarinda dengan karakteristik topografi relatif datar hingga landai. Wilayah cukup sesuai (warna kuning) tersebar di zona transisi dengan topografi bergelombang dan kemiringan sedang. Sementara wilayah tidak sesuai (warna merah) dominan terdapat di area perkotaan padat dan wilayah dengan topografi berbukit hingga bergunung dengan kemiringan curam. Pola distribusi ini sangat dipengaruhi oleh karakteristik geomorfologi Kota Samarinda yang memiliki variasi ketinggian dan kemiringan lahan cukup signifikan.
+                </p>
+              </div>
+              
+              <div style="background: linear-gradient(135deg, ${secondaryColor}, #e5e7eb); padding: ${baseSize * 2}px; border-radius: 12px; border-left: 4px solid ${primaryColor};">
+                <h4 style="font-size: ${baseSize * 1.15}px; font-weight: 600; color: ${textColor}; margin-bottom: ${baseSize * 1.05}px;">🎯 Rekomendasi Strategis:</h4>
+                <ul style="color: #4b5563; font-size: ${baseSize * 0.925}px; line-height: 1.9; margin: 0; padding-left: ${baseSize * 1.75}px;">
+                  <li style="margin-bottom: ${baseSize * 0.625}px;">Fokuskan program pengembangan dan intensifikasi pertanian bawang merah di Kecamatan Samarinda Ulu dan Samarinda Ilir sebagai zona prioritas</li>
+                  <li style="margin-bottom: ${baseSize * 0.625}px;">Sediakan pendampingan teknis, pelatihan budidaya, dan bantuan sarana produksi (benih unggul, pupuk) untuk petani di wilayah cukup sesuai</li>
+                  <li style="margin-bottom: ${baseSize * 0.625}px;">Bangun infrastruktur pendukung pertanian meliputi sistem irigasi, jalan usaha tani, dan gudang penyimpanan di zona prioritas</li>
+                  <li style="margin-bottom: ${baseSize * 0.625}px;">Lakukan monitoring dan evaluasi berkala terhadap perubahan penggunaan lahan dan kondisi biofisik lahan</li>
+                  <li>Integrasikan hasil analisis SIG ini ke dalam dokumen Rencana Tata Ruang Wilayah (RTRW) dan Rencana Pembangunan Jangka Menengah Daerah (RPJMD)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // ABOUT PAGE
+      else if (currentPage === 'about') {
+        content += `
+          <div style="max-width: 900px; margin: 0 auto; padding: ${baseSize * 4}px ${baseSize * 1.5}px;">
+            <div class="card-shadow" style="background: white; padding: ${baseSize * 4}px ${baseSize * 3}px; border-radius: 20px; text-align: center;">
+              <div style="width: ${baseSize * 6.5}px; height: ${baseSize * 6.5}px; background: linear-gradient(135deg, ${primaryColor}, ${accentColor}); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: ${baseSize * 3.25}px; margin: 0 auto ${baseSize * 2}px; box-shadow: 0 8px 24px rgba(4, 120, 87, 0.25);">🎓</div>
+              
+              <h2 style="font-size: ${baseSize * 2.75}px; font-weight: 700; color: ${primaryColor}; margin-bottom: ${baseSize * 1.75}px; font-family: ${headingFont};">Tentang Website SIG</h2>
+              
+              <div style="max-width: 650px; margin: 0 auto ${baseSize * 3}px; padding: ${baseSize * 2.25}px; background: ${secondaryColor}; border-radius: 12px;">
+                <p style="font-size: ${baseSize * 1.15}px; font-weight: 600; color: ${textColor}; margin-bottom: ${baseSize * 1.05}px;">Dibuat oleh:</p>
+                <p style="font-size: ${baseSize * 2.25}px; font-weight: 700; color: ${primaryColor}; margin: 0; font-family: ${headingFont};">${config.author_name || defaultConfig.author_name}</p>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: ${baseSize * 1.5}px; max-width: 650px; margin: 0 auto ${baseSize * 3}px;">
+                <div style="background: ${secondaryColor}; padding: ${baseSize * 1.75}px; border-radius: 12px;">
+                  <p style="font-size: ${baseSize * 0.875}px; color: #6b7280; margin-bottom: ${baseSize * 0.625}px; font-weight: 500;">Institusi</p>
+                  <p style="font-size: ${baseSize * 1.1}px; font-weight: 600; color: ${textColor}; margin: 0;">${config.institution || defaultConfig.institution}</p>
+                </div>
+                
+                <div style="background: ${secondaryColor}; padding: ${baseSize * 1.75}px; border-radius: 12px;">
+                  <p style="font-size: ${baseSize * 0.875}px; color: #6b7280; margin-bottom: ${baseSize * 0.625}px; font-weight: 500;">Tahun Penelitian</p>
+                  <p style="font-size: ${baseSize * 1.1}px; font-weight: 600; color: ${textColor}; margin: 0;">${config.year || defaultConfig.year}</p>
+                </div>
+              </div>
+              
+              <div style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: ${baseSize * 2.75}px; border-radius: 12px; border: 2px solid ${accentColor}; margin-bottom: ${baseSize * 2}px;">
+                <h3 style="font-size: ${baseSize * 1.4}px; font-weight: 600; color: #047857; margin-bottom: ${baseSize * 1.25}px; font-family: ${headingFont};">📚 Tentang Proyek Penelitian</h3>
+                <p style="font-size: ${baseSize * 0.975}px; color: #065f46; line-height: 1.9; margin: 0; text-align: justify;">
+                  Website ini menampilkan hasil analisis Sistem Informasi Geografis (SIG) untuk mengidentifikasi dan memvisualisasikan kesesuaian lahan budidaya bawang merah di Kota Samarinda, Kalimantan Timur. Analisis menggunakan metode <em>weighted overlay</em> dengan data Digital Elevation Model (DEM), parameter klimatologi, dan karakteristik pedologi untuk menghasilkan peta tematik klasifikasi lahan. Website berfungsi sebagai <strong>media dokumentasi, visualisasi, dan interpretasi hasil analisis SIG</strong> untuk keperluan akademik, penelitian, publikasi ilmiah, dan pengambilan keputusan dalam perencanaan pertanian.
+                </p>
+              </div>
+              
+              <div style="background: ${secondaryColor}; padding: ${baseSize * 2.25}px; border-radius: 12px; border-left: 4px solid ${primaryColor};">
+                <p style="font-size: ${baseSize * 0.925}px; color: #4b5563; line-height: 1.8; margin: 0; font-style: italic; text-align: left;">
+                  <strong style="color: ${textColor};">⚠️ Pernyataan Penting:</strong><br>
+                  Website ini menampilkan peta hasil analisis SIG dan digunakan sebagai media dokumentasi serta visualisasi untuk keperluan akademik, penelitian, skripsi, tesis, dan publikasi ilmiah. <strong>Peta yang ditampilkan merupakan hasil penelitian dan bukan peta interaktif berbasis web.</strong> Peta disajikan dalam format statis yang dapat diakses dan divisualisasikan melalui platform pihak ketiga. Untuk penggunaan data atau informasi dari website ini, mohon mencantumkan sitasi yang sesuai.
+                </p>
+              </div>
+              
+              <div style="margin-top: ${baseSize * 3.5}px; padding-top: ${baseSize * 2.25}px; border-top: 2px solid ${secondaryColor};">
+                <div style="display: flex; align-items: center; justify-content: center; gap: ${baseSize}px; margin-bottom: ${baseSize * 1.25}px;">
+                  <div style="width: ${baseSize * 2.75}px; height: ${baseSize * 2.75}px; background: ${primaryColor}; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: ${baseSize * 1.5}px;">📧</div>
+                  <p style="font-size: ${baseSize * 0.9}px; color: #6b7280; margin: 0;">Untuk pertanyaan atau kolaborasi, silakan hubungi melalui institusi</p>
+                </div>
+                <p style="font-size: ${baseSize * 0.875}px; color: #9ca3af; margin: 0; line-height: 1.7;">
+                  © ${config.year || defaultConfig.year} ${config.author_name || defaultConfig.author_name} • ${config.institution || defaultConfig.institution}<br>
+                  Dikembangkan untuk keperluan akademik dan penelitian Sistem Informasi Geografis
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      content += '</main>';
+      
+      // Footer
+      content += `
+        <footer style="background: ${textColor}; color: white; padding: ${baseSize * 3}px ${baseSize * 1.5}px; margin-top: ${baseSize * 4}px;">
+          <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: ${baseSize * 2.5}px; margin-bottom: ${baseSize * 2.5}px;">
+              <div>
+                <h3 style="font-size: ${baseSize * 1.2}px; font-weight: 600; margin-bottom: ${baseSize * 1.25}px; color: ${accentColor};">SIG Bawang Merah Samarinda</h3>
+                <p style="font-size: ${baseSize * 0.875}px; opacity: 0.85; line-height: 1.7; margin: 0;">Website dokumentasi dan visualisasi hasil analisis kesesuaian lahan untuk budidaya bawang merah di Kota Samarinda berbasis Digital Elevation Model (DEM).</p>
+              </div>
+              <div>
+                <h3 style="font-size: ${baseSize * 1.2}px; font-weight: 600; margin-bottom: ${baseSize * 1.25}px; color: ${accentColor};">Navigasi Cepat</h3>
+                <div style="display: flex; flex-direction: column; gap: ${baseSize * 0.625}px;">
+                  <button onclick="navigateTo('home')" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: ${baseSize * 0.875}px; text-align: left; padding: 0; transition: color 0.2s;" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">→ Beranda</button>
+                  <button onclick="navigateTo('map')" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: ${baseSize * 0.875}px; text-align: left; padding: 0; transition: color 0.2s;" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">→ Peta Kesesuaian</button>
+                  <button onclick="navigateTo('methodology')" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: ${baseSize * 0.875}px; text-align: left; padding: 0; transition: color 0.2s;" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">→ Metodologi</button>
+                  <button onclick="navigateTo('results')" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: ${baseSize * 0.875}px; text-align: left; padding: 0; transition: color 0.2s;" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">→ Hasil & Pembahasan</button>
+                  <button onclick="navigateTo('about')" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: ${baseSize * 0.875}px; text-align: left; padding: 0; transition: color 0.2s;" onmouseover="this.style.color='${accentColor}'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">→ Tentang</button>
+                </div>
+              </div>
+              <div>
+                <h3 style="font-size: ${baseSize * 1.2}px; font-weight: 600; margin-bottom: ${baseSize * 1.25}px; color: ${accentColor};">Informasi Peneliti</h3>
+                <p style="font-size: ${baseSize * 0.875}px; opacity: 0.85; line-height: 1.7; margin: 0 0 ${baseSize * 0.625}px 0;"><strong>Nama:</strong> ${config.author_name || defaultConfig.author_name}</p>
+                <p style="font-size: ${baseSize * 0.875}px; opacity: 0.85; line-height: 1.7; margin: 0 0 ${baseSize * 0.625}px 0;"><strong>Institusi:</strong> ${config.institution || defaultConfig.institution}</p>
+                <p style="font-size: ${baseSize * 0.875}px; opacity: 0.85; line-height: 1.7; margin: 0;"><strong>Tahun:</strong> ${config.year || defaultConfig.year}</p>
+              </div>
+            </div>
+            <div style="text-align: center; padding-top: ${baseSize * 2}px; border-top: 1px solid rgba(255,255,255,0.2);">
+              <p style="font-size: ${baseSize * 0.825}px; opacity: 0.7; margin: 0 0 ${baseSize * 0.5}px 0;">© ${config.year || defaultConfig.year} ${config.author_name || defaultConfig.author_name} • ${config.institution || defaultConfig.institution}</p>
+              <p style="font-size: ${baseSize * 0.8}px; opacity: 0.6; margin: 0;">Website SIG untuk keperluan akademik, penelitian, dan dokumentasi hasil analisis spasial</p>
+            </div>
+          </div>
+        </footer>
+      `;
+      
+      app.innerHTML = content;
+    }
+
+    function navigateTo(page) {
+      currentPage = page;
+      renderApp(window.elementSdk?.config || defaultConfig);
+      window.scrollTo(0, 0);
+    }
+
+    window.navigateTo = navigateTo;
+
+    async function onConfigChange(config) {
+      renderApp(config);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.primary_color || defaultConfig.primary_color,
+              set: (value) => {
+                config.primary_color = value;
+                window.elementSdk.setConfig({ primary_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_color || defaultConfig.secondary_color,
+              set: (value) => {
+                config.secondary_color = value;
+                window.elementSdk.setConfig({ secondary_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            },
+            {
+              get: () => config.accent_color || defaultConfig.accent_color,
+              set: (value) => {
+                config.accent_color = value;
+                window.elementSdk.setConfig({ accent_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["main_title", config.main_title || defaultConfig.main_title],
+          ["subtitle", config.subtitle || defaultConfig.subtitle],
+          ["home_description", config.home_description || defaultConfig.home_description],
+          ["map_caption", config.map_caption || defaultConfig.map_caption],
+          ["author_name", config.author_name || defaultConfig.author_name],
+          ["institution", config.institution || defaultConfig.institution],
+          ["year", config.year || defaultConfig.year]
+        ])
+      });
+    }
+
+    renderApp(defaultConfig);
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b2e6c56d67e7e2e',t:'MTc2NjU2MTczOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
